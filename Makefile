@@ -3,36 +3,40 @@
 all: install configure build haddock test hpc
 
 build:
-	cabal build --jobs
+	@cabal build --jobs
 
 clean:
-	cabal clean
+	@cabal clean
 	if test -d .cabal-sandbox; then cabal sandbox delete; fi
 	if test -d .hpc; then rm -r .hpc; fi
 
 configure:
-	cabal configure --enable-tests
+	@cabal configure --enable-tests
 
 haddock:
-	cabal haddock --hyperlink-source
+	@cabal haddock --hyperlink-source
 	# dist/doc/html/access/index.html
 
 hpc:
 	hpc markup --destdir=tmp dist/hpc/tix/tests/tests.tix
 
-install:
-	cabal sandbox init
-	cabal install \
+sandbox:
+	@cabal sandbox init
+
+install: sandbox
+	@cabal install \
 		--jobs \
-		--only-dependencies --reorder-goals --max-backjumps=200 \
+		--only-dependencies \
+		--enable-tests \
+		--reorder-goals --max-backjumps=200 \
 		--force-reinstalls --shadow-installed-packages
 
 repl:
-	cabal repl lib:access
+	@cabal repl lib:access
 
 run:
-	cabal run --jobs access
+	@cabal run --jobs access
 
 test:
-	cabal test --jobs
-	cabal check
+	@cabal test --jobs
+	@cabal check

@@ -4,18 +4,20 @@ module Access
 
 import           Control.Concurrent.Async.Lifted (mapConcurrently)
 import           Control.Lens
+import           Data.List                       (sortBy)
 import qualified Data.Map.Strict                 as M
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import qualified Data.Text                       as T
-import           Data.List                       (sortBy)
-import           Prelude                         hiding (error)
+import qualified Data.Text.IO                    as T
 import           System.Environment
+import           System.Exit                     (exitFailure)
+import           System.IO                       (hPutStrLn, stderr)
 
 import           Access.AWS
 import           Access.Config
+import           Access.Display (presentResults)
 import           Access.Types
-import           Access.Display
 
 {-
 ssh -t -q -A -p 10022 -o Compression=yes access.%{region}.ops.cardspring.net
@@ -24,16 +26,20 @@ ssh -t -q -A -p 10022 -o Compression=yes access.%{region}.ops.cardspring.net
 
 main :: IO ()
 main = do
-    (_listOnly, predicates) <- processArgs <$> getArgs
+    (listOnly, predicates) <- processArgs <$> getArgs
     cfg <- loadConfiguration
     instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
-    let headers = (cfg ^.fields)
-        sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
-        records = getRecords headers sortedInstancesData
-        recordsWithHeaders = [headers] ++ records
-        sizes = getRecordSizes recordsWithHeaders
+    let sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
+    if null sortedInstancesData
+    then hPutStrLn stderr "error: No matches found." >> exitFailure
+    else if listOnly then presentResults (cfg ^. fields) sortedInstancesData
+                     else executeCommand (cfg ^. command) sortedInstancesData
 
-    presentResults sizes recordsWithHeaders
+executeCommand :: Text -> [InstanceMetaData] -> IO ()
+executeCommand _ [] = error "No matches found."
+executeCommand cmd (imd:_) = do
+    T.putStrLn cmd
+    print imd
 
 getInstanceData :: [Predicate] -> Account -> IO [InstanceMetaData]
 getInstanceData predicates a = do
@@ -41,7 +47,7 @@ getInstanceData predicates a = do
     return $ filter (filterResults predicates) instancesData
 
 sortInstanceMetaData :: [Text] -> [InstanceMetaData] -> [InstanceMetaData]
-sortInstanceMetaData fields = sortBy (sortByFields fields)
+sortInstanceMetaData headers = sortBy (sortByFields headers)
 
 sortByFields :: [Text] -> InstanceMetaData -> InstanceMetaData -> Ordering
 sortByFields [] _ _ = EQ
@@ -49,21 +55,6 @@ sortByFields (f:fs) imd1 imd2 =
     case (imd1 ^.at f) `compare` (imd2 ^.at f) of
         EQ -> sortByFields fs imd1 imd2
         res -> res
-
-getRecordSizes :: [[Text]] -> [Int]
-getRecordSizes [] = []
-getRecordSizes records =
-    let zero = const 0 <$> (head records)
-        in foldr zipMax zero records
-  where
-    zipMax :: [Text] -> [Int] -> [Int]
-    zipMax = zipWith (\txt maxVal -> max maxVal (T.length txt))
-
-getRecords :: [Text] -> [InstanceMetaData] -> [[Text]]
-getRecords keyNames imds = (extractRowsForFields keyNames) <$> imds
-
-extractRowsForFields :: [Text] -> InstanceMetaData -> [Text]
-extractRowsForFields fs imd = (\x -> M.findWithDefault "(no data)" x imd) <$> fs
 
 processArgs :: [String] -> (Bool, [Predicate])
 processArgs ("list":args) = (True, makePredicates args)

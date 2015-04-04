@@ -5,7 +5,6 @@ module Access.Config
     , loadConfiguration
     ) where
 
-import           Control.Applicative     ((<$>))
 import           Data.Configurator
 import           Data.Configurator.Types (Config)
 import           Data.Either             (rights)
@@ -49,26 +48,5 @@ decodeAccountConfiguration c n = do
     regions <- parseRegions <$> lookupDefault ["us-east-1"] c (n <> ".regions")
     let creds = FromKeys (AccessKey accessKeyId) (SecretKey secretAccessKey)
     mapM (\r -> getEnv r creds >>= \e -> return $ Account n e) regions
-
-parseRegions :: [Text]
-             -> [Region]
-parseRegions regions = rights $ fromText <$> regions
-
-{-
-dumpDefaultSettings :: IO ()
-dumpDefaultSettings = putStrLn . unlines defaultRC
   where
-    defaultRC = [ "access {"
-                , "   accounts = [\"default\"]"
-                , "   display = [\"name\"]"
-                , "   sort = [\"account\", \"name\"]"
-                , "   ssh = [\"ssh\", \"-A\",\"{name}\"]"
-                , "}"
-                , ""
-                , "default {"
-                , "  access_key_id = \"AK....\""
-                , "  secret_access_key= \"Al...\""
-                , "  regions = [\"us-east-1\", \"us-west-2\"]"
-                , "}"
-                ]
--}
+    parseRegions regions = rights $ fromText <$> regions

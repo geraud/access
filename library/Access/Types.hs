@@ -23,10 +23,10 @@ instance Show Account where
     show a = "Account " <> show (a ^. accountName) <> " " <> show (a ^. accountEnv.envRegion)
 
 data Configuration = Configuration
-    { _accounts :: [Account]
-    , _fields   :: [Text]
-    , _sort     :: [Text]
-    , _command  :: Text
+    { _accounts   :: [Account]
+    , _fields     :: [Text]
+    , _sortFields :: [Text]
+    , _command    :: Text
     }
 
 makeLenses ''Configuration

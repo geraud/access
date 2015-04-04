@@ -8,6 +8,7 @@ import qualified Data.Map.Strict                 as M
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import qualified Data.Text                       as T
+import           Data.List                       (sortBy)
 import           Prelude                         hiding (error)
 import           System.Environment
 
@@ -27,9 +28,11 @@ main = do
     cfg <- loadConfiguration
     instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
     let headers = (cfg ^.fields)
-        records = getRecords headers instancesData
+        sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
+        records = getRecords headers sortedInstancesData
         recordsWithHeaders = [headers] ++ records
         sizes = getRecordSizes recordsWithHeaders
+
     presentResults sizes recordsWithHeaders
 
 getInstanceData :: [Predicate] -> Account -> IO [InstanceMetaData]
@@ -37,20 +40,30 @@ getInstanceData predicates a = do
     instancesData <- loadInstanceData a
     return $ filter (filterResults predicates) instancesData
 
+sortInstanceMetaData :: [Text] -> [InstanceMetaData] -> [InstanceMetaData]
+sortInstanceMetaData fields = sortBy (sortByFields fields)
+
+sortByFields :: [Text] -> InstanceMetaData -> InstanceMetaData -> Ordering
+sortByFields [] _ _ = EQ
+sortByFields (f:fs) imd1 imd2 =
+    case (imd1 ^.at f) `compare` (imd2 ^.at f) of
+        EQ -> sortByFields fs imd1 imd2
+        res -> res
+
 getRecordSizes :: [[Text]] -> [Int]
 getRecordSizes [] = []
 getRecordSizes records =
-    let zero = map (const 0) (head records)
+    let zero = const 0 <$> (head records)
         in foldr zipMax zero records
   where
     zipMax :: [Text] -> [Int] -> [Int]
     zipMax = zipWith (\txt maxVal -> max maxVal (T.length txt))
 
 getRecords :: [Text] -> [InstanceMetaData] -> [[Text]]
-getRecords keyNames imds = map (extractRowsForFields keyNames) imds
+getRecords keyNames imds = (extractRowsForFields keyNames) <$> imds
 
 extractRowsForFields :: [Text] -> InstanceMetaData -> [Text]
-extractRowsForFields fs imd = map (\x -> M.findWithDefault "(no data)" x imd) fs
+extractRowsForFields fs imd = (\x -> M.findWithDefault "(no data)" x imd) <$> fs
 
 processArgs :: [String] -> (Bool, [Predicate])
 processArgs ("list":args) = (True, makePredicates args)

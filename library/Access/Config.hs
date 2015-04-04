@@ -32,11 +32,11 @@ decodeConfiguration cfg = do
     accountNames <- require cfg "access.accounts" :: IO [Text]
     cfgAccounts <- concat <$> mapM (decodeAccountConfiguration cfg) accountNames
     cfgFields <- lookupDefault ["instance_id"] cfg "access.fields"
-    cfgSort <- lookupDefault [] cfg "access.sort"
+    cfgSortFields <- lookupDefault [] cfg "access.sort_by"
     cfgCommand <- lookupDefault "ssh $(public_dns)" cfg "access.command"
     return Configuration { _accounts = cfgAccounts
                          , _fields = cfgFields
-                         , _sort = cfgSort
+                         , _sortFields = cfgSortFields
                          , _command = cfgCommand
                          }
 

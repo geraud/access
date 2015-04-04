@@ -4,6 +4,7 @@ module Access
 
 import           Control.Concurrent.Async.Lifted (mapConcurrently)
 import           Control.Lens
+import           Control.Monad                   (when)
 import           Data.List                       (sortBy)
 import qualified Data.Map.Strict                 as M
 import           Data.Monoid                     ((<>))
@@ -12,17 +13,11 @@ import qualified Data.Text                       as T
 import qualified Data.Text.IO                    as T
 import           System.Environment
 import           System.Exit                     (exitFailure)
-import           System.IO                       (hPutStrLn, stderr)
 
 import           Access.AWS
 import           Access.Config
-import           Access.Display (presentResults)
+import           Access.Display                  (presentResults)
 import           Access.Types
-
-{-
-ssh -t -q -A -p 10022 -o Compression=yes access.%{region}.ops.cardspring.net
-"exec ssh -q -p 10022 -A -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p 10022 %{hostname}"
--}
 
 main :: IO ()
 main = do
@@ -31,9 +26,9 @@ main = do
     instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
     let sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
     if null sortedInstancesData
-    then hPutStrLn stderr "error: No matches found." >> exitFailure
-    else if listOnly then presentResults (cfg ^. fields) sortedInstancesData
-                     else executeCommand (cfg ^. command) sortedInstancesData
+    then error "No matches found."
+    else if listOnly then presentResults (cfg ^.fields) sortedInstancesData
+                     else executeCommand (cfg ^.command) sortedInstancesData
 
 executeCommand :: Text -> [InstanceMetaData] -> IO ()
 executeCommand _ [] = error "No matches found."

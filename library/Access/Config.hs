@@ -12,7 +12,7 @@ import           Data.Monoid             ((<>))
 import           Data.Text               (Text)
 import           Network.AWS             (AccessKey (..), Credentials (..),
                                           SecretKey (..))
-import           Network.AWS             (Region, getEnv)
+import           Network.AWS             (getEnv)
 import           Network.AWS.Data        (fromText)
 import           System.Directory
 import           System.FilePath.Posix

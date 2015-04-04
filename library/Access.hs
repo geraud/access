@@ -10,13 +10,12 @@ import qualified Data.Map.Strict                 as M
 import           Data.Monoid                     ((<>))
 import           Data.Text                       (Text)
 import qualified Data.Text                       as T
-import qualified Data.Text.IO                    as T
-import           System.Environment
-import           System.Exit                     (exitFailure)
+import           System.Environment              (getArgs)
 
 import           Access.AWS
 import           Access.Config
 import           Access.Display                  (presentResults)
+import           Access.Execution                (executeCommand)
 import           Access.Types
 
 main :: IO ()
@@ -24,17 +23,12 @@ main = do
     (listOnly, predicates) <- processArgs <$> getArgs
     cfg <- loadConfiguration
     instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
+    --when (listOnly && length predicates < 2) $ error "No predicates specified."
     let sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
     if null sortedInstancesData
     then error "No matches found."
     else if listOnly then presentResults (cfg ^.fields) sortedInstancesData
                      else executeCommand (cfg ^.command) sortedInstancesData
-
-executeCommand :: Text -> [InstanceMetaData] -> IO ()
-executeCommand _ [] = error "No matches found."
-executeCommand cmd (imd:_) = do
-    T.putStrLn cmd
-    print imd
 
 getInstanceData :: [Predicate] -> Account -> IO [InstanceMetaData]
 getInstanceData predicates a = do

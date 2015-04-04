@@ -37,13 +37,14 @@ library
       , amazonka == 0.3.*
       , amazonka-core == 0.3.*
       , amazonka-ec2 == 0.3.*
-      , containers == 0.5.6.*
       , bytestring == 0.10.*
       , configurator == 0.3.*
+      , containers == 0.5.6.*
       , directory == 1.2.*
       , filepath == 1.4.*
       , lens == 4.8.*
       , lifted-async == 0.6.*
+      , process == 1.2.*
       , text == 1.2.*
     default-language:
         Haskell2010
@@ -52,6 +53,7 @@ library
         Access.AWS
         Access.Config
         Access.Display
+        Access.Execution
     other-modules:
         Access.Types
     ghc-options:

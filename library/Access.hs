@@ -21,9 +21,9 @@ import           Access.Types
 main :: IO ()
 main = do
     (listOnly, predicates) <- processArgs <$> getArgs
+    when (not listOnly && length predicates == 1) $ error "No predicates specified."
     cfg <- loadConfiguration
     instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
-    --when (listOnly && length predicates < 2) $ error "No predicates specified."
     let sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
     if null sortedInstancesData
     then error "No matches found."

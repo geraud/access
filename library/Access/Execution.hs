@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Access.Execution where
 
+import           Control.Arrow      (first, (***))
 import           Data.Char          (isAlphaNum, toUpper)
 import qualified Data.Map.Strict    as M
 import           Data.Monoid        ((<>))
@@ -14,15 +15,17 @@ import           System.Process     (CreateProcess (..), StdStream (..),
 
 import           Access.Types
 
-executeCommand :: Text -> [InstanceMetaData] -> IO ()
+executeCommand :: Text
+               -> [InstanceMetaData]
+               -> IO ()
 executeCommand _ [] = error "No matches found."
 executeCommand cmd (imd:_) = do
     e <- getEnvironment
-    let processEnv = (e <> (toEnvironment imd))
+    let processEnv = e <> toEnvironment imd
         name = imd M.! "name"
         region = imd M.! "region"
         public_dns = imd M.! "public_dns"
-        message = "Connecting " <> name  <> " in " <> region <> " (" <> public_dns <> ")"
+        message = "Connecting " <> name <> " in " <> region <> " (" <> public_dns <> ")"
         cp = (shell $ T.unpack cmd) { std_in = Inherit
                                     , std_out = Inherit
                                     , std_err= Inherit
@@ -33,8 +36,13 @@ executeCommand cmd (imd:_) = do
     rc <- waitForProcess processHandle
     exitWith rc
 
-toEnvironment :: InstanceMetaData -> [(String, String)]
-toEnvironment imd = (\(k,v) -> (capitalizeKey k, T.unpack v)) <$> (M.toList imd)
+-- | Convert the insteance meta-data hash to a list.
+toEnvironment :: InstanceMetaData   -- ^ instance meta-data
+              -> [(String, String)] -- ^ list of key/value tuples
+toEnvironment imd = first capitalizeKey . T.unpack *** T.unpack <$> M.toList imd
 
-capitalizeKey :: Text -> String
-capitalizeKey key = (\c -> if isAlphaNum c then toUpper c else '_') <$> T.unpack key
+-- | The keys are capitalized and are purged of non
+-- alpha-numeric character by converting them to underscores.
+capitalizeKey :: String -- ^ input such as aws:cloudformation:stack-name
+              -> String -- ^ ouptut AWS_CLOUDFORMATION_STACK_NAME
+capitalizeKey key = (\c -> if isAlphaNum c then toUpper c else '_') <$> key

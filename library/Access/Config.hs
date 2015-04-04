@@ -11,8 +11,7 @@ import           Data.Either             (rights)
 import           Data.Monoid             ((<>))
 import           Data.Text               (Text)
 import           Network.AWS             (AccessKey (..), Credentials (..),
-                                          SecretKey (..))
-import           Network.AWS             (getEnv)
+                                          SecretKey (..), getEnv)
 import           Network.AWS.Data        (fromText)
 import           System.Directory
 import           System.FilePath.Posix
@@ -25,8 +24,9 @@ loadConfiguration = do
     cfg <- load [Required configurationFile]
     decodeConfiguration cfg
 
-decodeConfiguration :: Config
-                    -> IO Configuration
+-- | Extracts data out of the Config and create a Configuration record.
+decodeConfiguration :: Config           -- ^ configurator's Config
+                    -> IO Configuration -- ^
 decodeConfiguration cfg = do
     accountNames <- require cfg "access.accounts" :: IO [Text]
     cfgAccounts <- concat <$> mapM (decodeAccountConfiguration cfg) accountNames
@@ -39,9 +39,10 @@ decodeConfiguration cfg = do
                          , _command = cfgCommand
                          }
 
-decodeAccountConfiguration :: Config
-                           -> Text
-                           -> IO [Account]
+-- | Decode the data necessary for querying AWS
+decodeAccountConfiguration :: Config       -- ^ Config containing the account's data
+                           -> Text         -- ^ name of the account
+                           -> IO [Account] -- ^ return an Account record for each region found
 decodeAccountConfiguration c n = do
     accessKeyId <- require c (n <> ".access_key_id")
     secretAccessKey <- require c (n <> ".secret_access_key")

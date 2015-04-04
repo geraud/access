@@ -16,8 +16,8 @@ import           Prelude                 hiding (error)
 
 import           Access.Types
 
-loadInstanceData :: Account
-                 -> IO [InstanceMetaData]
+loadInstanceMetaData :: Account               -- ^ Account settings for a region
+                     -> IO [InstanceMetaData] -- ^ list of all InstanceMetaData found for each instance in this account
 loadInstanceData (Account name env) = do
     result <- runAWST env $ send describeInstances
     case result of
@@ -25,34 +25,30 @@ loadInstanceData (Account name env) = do
             putStrLn $ "Error: " <> show errorMsg
             return []
         Right result' -> do
-            let imds = concatMap processReservation (result'^.dirReservations)
-            return $ (M.insert "account" name) <$> imds
+            let imds = processInstance <$> (result' ^..dirReservations.traverse.rInstances.traverse)
+            return $ M.insert "account" name <$> imds
 
-processReservation :: Reservation
-                   -> [InstanceMetaData]
-processReservation r = processInstance <$> (r^.rInstances)
+-- | processInstance transforms an AWS record
+processInstance :: Instance         -- ^ An AWS instance record
+                -> InstanceMetaData -- ^ InstanceMetaData combining data from the instance and its tags
+processInstance i = let mInst = metaDataFromInstance i
+                        mTags = metaDataFromTags (i^.i1Tags)
+                    in mInst <> mTags
 
-processInstance :: Instance
-                -> InstanceMetaData
-processInstance i =
-    let mInst = metaDataFromInstance i
-        mTags = metaDataFromTags (i^.i1Tags)
-    in mInst <> mTags
-
-metaDataFromInstance :: Instance
-                     -> InstanceMetaData
+metaDataFromInstance :: Instance         -- ^ An AWS instance record
+                     -> InstanceMetaData -- ^ InstanceMetaData extracted from the instance
 metaDataFromInstance i =
-    M.fromList [ ("availibility_zone", fromMaybe "" $ i ^. i1Placement.pAvailabilityZone)
+    M.fromList [ ("availibility_zone", fromMaybe "" $ i ^.i1Placement.pAvailabilityZone)
                , ("instance_id", i ^. i1InstanceId)
-               , ("instance_type", toText $ i ^. i1InstanceType)
-               , ("private_ip", fromMaybe "" $ i ^. i1PrivateIpAddress)
-               , ("public_dns", fromMaybe "" $ i ^. i1PublicDnsName)
-               , ("public_ip", fromMaybe "" $ i ^. i1PublicIpAddress)
-               , ("region", T.init . (fromMaybe "x") $ i ^. i1Placement.pAvailabilityZone)
-               , ("state", toText $ i ^. i1State.isName)
+               , ("instance_type", toText $ i ^.i1InstanceType)
+               , ("private_ip", toValue $ i ^.i1PrivateIpAddress)
+               , ("public_dns", toValue $ i ^.i1PublicDnsName)
+               , ("public_ip", toValue $ i ^.i1PublicIpAddress)
+               , ("region", T.init . fromMaybe "x" $ i ^.i1Placement.pAvailabilityZone)
+               , ("state", toText $ i ^.i1State.isName)
                ]
+  where toValue = fromMaybe "(no data)"
 
-metaDataFromTags :: [Tag]
-                 -> InstanceMetaData
-metaDataFromTags ts = M.fromList $ convertTag <$> ts
-  where convertTag t = ((T.toLower $ t^.tagKey), (t^.tagValue))
+metaDataFromTags :: [Tag]            -- ^ list of tags to process
+                 -> InstanceMetaData -- ^ InstanceMetaData built from the tags
+metaDataFromTags ts = M.fromList $ first T.toLower . (_tagKey *** _tagValue) <$> ts

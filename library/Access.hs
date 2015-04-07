@@ -32,7 +32,7 @@ main = do
 
 getInstanceData :: [Predicate] -> Account -> IO [InstanceMetaData]
 getInstanceData predicates a = do
-    instancesData <- loadInstanceData a
+    instancesData <- loadInstancesMetaData a
     return $ filter (filterResults predicates) instancesData
 
 sortInstanceMetaData :: [Text] -> [InstanceMetaData] -> [InstanceMetaData]

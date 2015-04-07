@@ -1,11 +1,14 @@
 # Access
 
-Command line tool to access AWS instances running in one or more accounts. It is configured through
-a simple rc file.
+`access` is a command line tool for anyone using Amazon Web Services (AWS) who wishes to list or connect to machines.
+It is configured through a simple rc file.
 
 ## Usage
 
-`access` can be used to lookup or connect to an instance.
+`access` has two modes of operation:
+
+0. it can be used to list instances matching one or more criteria.
+0. it can be used to connect to a machine based on these criteria.
 
 ### List instances
 
@@ -20,7 +23,7 @@ bla-62dc759e       default  10.10.6.123  ec2-10-10-6-123.compute-1.amazonaws.com
 ```
 
 To select specific instances you can type one or more of its attributes.
-For instance, if you want to get a list of all machines which name start with 'bla' type:
+For instance, if you want to get a list of all machines which name starts with 'bla', type:
 
 ```bash
 $ access list bla
@@ -29,7 +32,7 @@ name           account  private_ip   public_dns                               pu
 bla-62dc759e   default  10.10.6.123  ec2-10-10-6-123.compute-1.amazonaws.com  54.80.123.123  c3.large       us-east-1
 ```
 
-or to list the c3.large instances in your account type:
+or to list the c3.large instances in your account, type:
 
 ```
 $ access list c3.large
@@ -41,7 +44,7 @@ machine-62dc759e   default  10.10.6.123  ec2-10-10-6-123.compute-1.amazonaws.com
 bla-62dc759e       default  10.10.6.123  ec2-10-10-6-123.compute-1.amazonaws.com  54.80.123.123  c3.large       us-east-1
 ```
 
-### Connect to a machine in an account
+### Connect to a machine
 
 The main goal of access is to reach any running instances quickly.
 Connect to a machine by any attribute (name public_ip ...)
@@ -61,7 +64,7 @@ Connecting 10.10.6.123 in us-east-1 (ec2-10-10-6-123.compute-1.amazonaws.com)
 Bryan O'Sullivan for its configuration. Its language is inspired by configgy.
 Please refer to the module documentation for additional details; it has really neat features.
 
-There is one gotcha to be wary of: in the command section, entries starting with a single dollar sign "$"
+There is one gotcha to be aware of: in the command section, entries starting with a single dollar sign "$"
 will need to be escaped by "$$".
 
 The configuration is loaded from `$HOME/.accessrc`
@@ -70,10 +73,9 @@ The configuration is loaded from `$HOME/.accessrc`
 
 The access section of the configuration requires 4 entries
 * `accounts`: names of the account configuration sections
-* `fields`: list of fields selected for display (see bellow).
+* `fields`: list of fields selected for display (see below).
 * `sort_by`: list of the names of the account configuration sections
 * `command`: is a command to execute. This command will run in a shell.
-
 
 The account section of the aws configuration requires 3 entries
 * `access_key_id` and `secret_access_key`: your credentials of the account.
@@ -125,11 +127,17 @@ staging {
 
 The field section refers to data about the instance. The fields can be picked from the list:
 * `account`
+* `architecture`
 * `availibility_zone`
+* `hypervisor_type`
+* `image_id`
 * `instance_id`
 * `instance_type`
 * `name`
+* `private_dns`
 * `private_ip`
 * `public_dns`
 * `public_ip`
 * `region`
+* `virtualization_type`
+* `vpc_id`

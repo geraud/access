@@ -39,7 +39,7 @@ executeCommand cmd (imd:_) = do
 -- | Convert the insteance meta-data hash to a list.
 toEnvironment :: InstanceMetaData   -- ^ instance meta-data
               -> [(String, String)] -- ^ list of key/value tuples
-toEnvironment imd = first capitalizeKey . T.unpack *** T.unpack <$> M.toList imd
+toEnvironment imd = (first capitalizeKey).(T.unpack *** T.unpack) <$> M.toList imd
 
 -- | The keys are capitalized and are purged of non
 -- alpha-numeric character by converting them to underscores.

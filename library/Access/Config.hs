@@ -32,12 +32,8 @@ decodeConfiguration cfg = do
     cfgAccounts <- concat <$> mapM (decodeAccountConfiguration cfg) accountNames
     cfgFields <- lookupDefault ["instance_id"] cfg "access.fields"
     cfgSortFields <- lookupDefault [] cfg "access.sort_by"
-    cfgCommand <- lookupDefault "ssh $(public_dns)" cfg "access.command"
-    return Configuration { _accounts = cfgAccounts
-                         , _fields = cfgFields
-                         , _sortFields = cfgSortFields
-                         , _command = cfgCommand
-                         }
+    cfgCommand <- lookupDefault "ssh $$PUBLIC_DNS" cfg "access.command"
+    return $ Configuration cfgAccounts cfgFields cfgSortFields cfgCommand
 
 -- | Decode the data necessary for querying AWS
 decodeAccountConfiguration :: Config       -- ^ Config containing the account's data

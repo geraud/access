@@ -1,7 +1,6 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
 module Access.Types where
 
 import           Control.Lens
@@ -13,23 +12,16 @@ import           Network.AWS     (Env, envRegion)
 type InstanceMetaData = M.Map Text Text
 
 data Account = Account
-    { _accountName :: Text -- name of the account
-    , _accountEnv  :: Env  -- aws environment (combination of the credentials and the region)
+    { getAccountName :: Text -- name of the account
+    , getAccountEnv  :: Env  -- aws environment (combination of the credentials and the region)
     }
-
-makeLenses ''Account
-
-instance Show Account where
-    show a = "Account " <> show (a ^. accountName) <> " " <> show (a ^. accountEnv.envRegion)
 
 data Configuration = Configuration
-    { _accounts   :: [Account]
-    , _fields     :: [Text]
-    , _sortFields :: [Text]
-    , _command    :: Text
+    { getAccounts   :: [Account]
+    , getFields     :: [Text]
+    , getSortFields :: [Text]
+    , getCommand    :: Text
     }
-
-makeLenses ''Configuration
 
 data Predicate
     = KeyValueMatcher Text Text

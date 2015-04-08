@@ -3,7 +3,6 @@ module Access
     (main) where
 
 import           Control.Concurrent.Async.Lifted (mapConcurrently)
-import           Control.Lens
 import           Control.Monad                   (when)
 import           Data.List                       (sortBy)
 import qualified Data.Map.Strict                 as M
@@ -23,12 +22,12 @@ main = do
     (listOnly, predicates) <- processArgs <$> getArgs
     when (not listOnly && length predicates == 1) $ error "No predicates specified."
     cfg <- loadConfiguration
-    instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (cfg ^.accounts)
-    let sortedInstancesData = sortInstanceMetaData (cfg ^.sortFields) instancesData
+    instancesData <- concat <$> mapConcurrently (getInstanceData predicates) (getAccounts cfg)
+    let sortedInstancesData = sortInstanceMetaData (getSortFields cfg) instancesData
     if null sortedInstancesData
     then error "No matches found."
-    else if listOnly then presentResults (cfg ^.fields) sortedInstancesData
-                     else executeCommand (cfg ^.command) sortedInstancesData
+    else if listOnly then presentResults (getFields cfg) sortedInstancesData
+                     else executeCommand (getCommand cfg) sortedInstancesData
 
 getInstanceData :: [Predicate] -> Account -> IO [InstanceMetaData]
 getInstanceData predicates a = do
@@ -41,7 +40,7 @@ sortInstanceMetaData headers = sortBy (sortByFields headers)
 sortByFields :: [Text] -> InstanceMetaData -> InstanceMetaData -> Ordering
 sortByFields [] _ _ = EQ
 sortByFields (f:fs) imd1 imd2 =
-    case (imd1 ^.at f) `compare` (imd2 ^.at f) of
+    case (imd1 M.! f) `compare` (imd2 M.! f) of
         EQ -> sortByFields fs imd1 imd2
         res -> res
 

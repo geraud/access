@@ -3,11 +3,9 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Access.Types where
 
-import           Control.Lens
 import qualified Data.Map.Strict as M
-import           Data.Monoid     ((<>))
 import           Data.Text       (Text)
-import           Network.AWS     (Env, envRegion)
+import           Network.AWS     (Env)
 
 type InstanceMetaData = M.Map Text Text
 

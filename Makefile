@@ -11,7 +11,7 @@ clean:
 	if test -d .hpc; then rm -r .hpc; fi
 
 configure:
-	@cabal configure --enable-tests
+	@cabal configure --enable-tests --ghc-option=-static --disable-shared
 
 haddock:
 	@cabal haddock --hyperlink-source

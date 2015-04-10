@@ -3,12 +3,12 @@
 {-# OPTIONS_GHC -fno-cse #-}
 module Access.CLI where
 
-import           Data.Text              (Text)
-import           System.Console.CmdArgs
+import Data.Text              (Text)
+import System.Console.CmdArgs
 
 data Command
     = Execute { getPredicates :: [Text] }
-    | List    { getPredicates :: [Text] }
+    | List { getPredicates :: [Text] }
     deriving (Show, Data, Typeable)
 
 getCommandLine :: IO Command

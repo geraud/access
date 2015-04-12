@@ -5,18 +5,17 @@ module Access.Config
     , loadConfiguration
     ) where
 
-import           Data.Configurator
-import           Data.Configurator.Types (Config)
-import           Data.Either             (rights)
-import           Data.Monoid             ((<>))
-import           Data.Text               (Text)
-import           Network.AWS             (AccessKey (..), Credentials (..),
-                                          SecretKey (..), getEnv)
-import           Network.AWS.Data        (fromText)
-import           System.Directory
-import           System.FilePath.Posix
+import Data.Configurator
+import Data.Configurator.Types (Config)
+import Data.Either             (rights)
+import Data.Monoid             ((<>))
+import Data.Text               (Text)
+import Network.AWS             (AccessKey (..), Credentials (..), SecretKey (..), getEnv)
+import Network.AWS.Data        (fromText)
+import System.Directory
+import System.FilePath.Posix
 
-import           Access.Types
+import Access.Types
 
 loadConfiguration :: IO Configuration -- loads the configuration from $HOME/.accessrc
 loadConfiguration = do
@@ -46,4 +45,4 @@ decodeAccountConfiguration c n = do
     let creds = FromKeys (AccessKey accessKeyId) (SecretKey secretAccessKey)
     mapM (\r -> getEnv r creds >>= \e -> return $ Account n e) regions
   where
-    parseRegions regions = rights $ fromText <$> regions
+    parseRegions rs = rights $ fromText <$> rs

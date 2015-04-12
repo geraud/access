@@ -1,4 +1,5 @@
 # Access
+[![Build Status](https://travis-ci.org/geraud/access.svg?branch=master)] (https://travis-ci.org/geraud/access)
 
 `access` is a command line tool for anyone using Amazon Web Services (AWS) who wishes to list or connect to machines.
 It is configured through a simple rc file.

@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Access (main) where
 
-import           Control.Monad    (unless)
+import Control.Monad    (unless)
 
-import           Access.AWS
-import           Access.CLI
-import           Access.Config
-import           Access.Display   (presentResults)
-import           Access.Execution (executeCommand)
-import           Access.Process
-import           Access.Types
+import Access.AWS
+import Access.CLI
+import Access.Config
+import Access.Display   (presentResults)
+import Access.Execution (executeCommand)
+import Access.Process
+import Access.Types
 
 main :: IO ()
 main = do

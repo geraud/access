@@ -40,7 +40,7 @@ metaDataFromInstance :: Instance         -- ^ An AWS instance record
                      -> InstanceMetaData -- ^ InstanceMetaData extracted from the instance
 metaDataFromInstance i =
     M.fromList [ ("architecture", toText $ i ^.i1Architecture)
-               , ("availibility_zone", fromMaybe "" $ i ^.i1Placement.pAvailabilityZone)
+               , ("availibility_zone", toValue $ i ^.i1Placement.pAvailabilityZone)
                , ("hypervisor_type", toText $ i ^.i1Hypervisor)
                , ("image_id", i ^. i1ImageId)
                , ("instance_id", i ^. i1InstanceId)

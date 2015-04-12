@@ -67,6 +67,8 @@ library
         -prof
     hs-source-dirs:
         library
+    ghc-options:
+      -O2 -funbox-strict-fields -threaded -Wall
 
 executable access
     build-depends:

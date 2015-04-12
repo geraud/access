@@ -10,8 +10,8 @@ import qualified Data.Text          as T
 import qualified Data.Text.IO       as T
 import           System.Environment (getEnvironment)
 import           System.Exit        (exitWith)
-import           System.Process     (CreateProcess (..), StdStream (..),
-                                     createProcess, shell, waitForProcess)
+import           System.Process     (CreateProcess (..), StdStream (..), createProcess, shell,
+                                     waitForProcess)
 
 import           Access.Types
 

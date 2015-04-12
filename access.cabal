@@ -33,7 +33,7 @@ version:
 
 library
     build-depends:
-        base >= 4.7
+        base >= 4.5
       , amazonka == 0.3.*
       , amazonka-core == 0.3.*
       , amazonka-ec2 == 0.3.*

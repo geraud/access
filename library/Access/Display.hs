@@ -31,9 +31,7 @@ extractRowsForFields fs imd = (\x -> M.findWithDefault "(no data)" x imd) <$> fs
 
 -- | Traverses the entire record set and calculates the width of each column
 getRecordSizes :: [[Text]] -> [Int]
-getRecordSizes [] = []
-getRecordSizes records = let zero = const 0 <$> head records
-                         in foldr zipMax zero records
+getRecordSizes records = foldr zipMax (repeat 0) records
 
 -- | Zips a list of Text and a list of Int of the same length and returns
 -- a list of the max length for each entry in the list

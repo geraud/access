@@ -17,8 +17,8 @@ import           Prelude                 hiding (error)
 
 import           Access.Types
 
-loadInstancesMetaData :: Account              -- ^ Account settings for a region
-                     -> IO [InstanceMetaData] -- ^ list of all InstanceMetaData found for each instance in this account
+loadInstancesMetaData :: Account               -- ^ Account settings for a region
+                      -> IO [InstanceMetaData] -- ^ list of all InstanceMetaData found for each instance in this account
 loadInstancesMetaData (Account name env) = do
     result <- runAWST env $ send describeInstances
     case result of
@@ -39,23 +39,24 @@ processInstance i = let mInst = metaDataFromInstance i
 metaDataFromInstance :: Instance         -- ^ An AWS instance record
                      -> InstanceMetaData -- ^ InstanceMetaData extracted from the instance
 metaDataFromInstance i =
-    M.fromList [ ("architecture", toText $ i ^.i1Architecture)
-               , ("availibility_zone", toValue $ i ^.i1Placement.pAvailabilityZone)
-               , ("hypervisor_type", toText $ i ^.i1Hypervisor)
+    M.fromList [ ("architecture", i ^.i1Architecture & toText)
+               , ("availability_zone", i ^.i1Placement.pAvailabilityZone & toValue)
+               , ("hypervisor_type", i ^.i1Hypervisor & toText)
                , ("image_id", i ^. i1ImageId)
                , ("instance_id", i ^. i1InstanceId)
-               , ("instance_type", toText $ i ^.i1InstanceType)
-               , ("private_dns", toValue $ i ^.i1PrivateDnsName)
-               , ("private_ip", toValue $ i ^.i1PrivateIpAddress)
-               , ("public_dns", toValue $ i ^.i1PublicDnsName)
-               , ("public_ip", toValue $ i ^.i1PublicIpAddress)
-               , ("region", T.init . fromMaybe "x" $ i ^.i1Placement.pAvailabilityZone)
-               , ("state", toText $ i ^.i1State.isName)
-               , ("virtualization_type", toText $ i ^.i1VirtualizationType)
-               , ("vpc_id", toValue $ i ^.i1VpcId)
+               , ("instance_type", i ^.i1InstanceType & toText)
+               , ("private_dns", i ^.i1PrivateDnsName & toValue)
+               , ("private_ip", i ^.i1PrivateIpAddress & toValue)
+               , ("public_dns", i ^.i1PublicDnsName & toValue)
+               , ("public_ip", i ^.i1PublicIpAddress & toValue)
+               , ("region", i ^.i1Placement.pAvailabilityZone & toRegion)
+               , ("state", i ^.i1State.isName & toText)
+               , ("virtualization_type", i ^.i1VirtualizationType & toText)
+               , ("vpc_id", i ^.i1VpcId & toValue)
                ]
   where toValue = fromMaybe "(no data)"
+        toRegion = T.init . fromMaybe "x"
 
 metaDataFromTags :: [Tag]            -- ^ list of tags to process
                  -> InstanceMetaData -- ^ InstanceMetaData built from the tags
-metaDataFromTags ts = M.fromList $ (first T.toLower).(\t -> (t^.tagKey, t^.tagValue)) <$> ts
+metaDataFromTags ts = M.fromList $ (first T.toLower) . (\t -> (t^.tagKey, t^.tagValue)) <$> ts
